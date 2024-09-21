@@ -1,0 +1,9 @@
+def z_score_anomaly_detection(data, threshold=2):				
+anomalies = []				
+mean = np.mean(data)				
+std_dev = np.std(data)				
+for index, value in enumerate(data):				
+z_score = (value - mean) / std_dev				
+if abs(z_score) > threshold:				
+anomalies.append((index, value)) # Storing index and value of the anomaly				
+return anomalies				
