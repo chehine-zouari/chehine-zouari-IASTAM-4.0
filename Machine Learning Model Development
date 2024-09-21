@@ -1,0 +1,66 @@
+# Import necessary libraries
+import pandas as pd
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+
+# Sample synthetic dataset
+# Columns: sensor_id, sensor_type, location_x, location_y, location_z, environment_factor, temporal_pattern, component_id
+data = {
+    'sensor_id': range(1, 101),
+    'sensor_type': np.random.choice(['temperature', 'humidity', 'pressure'], 100),
+    'location_x': np.random.uniform(0, 100, 100),
+    'location_y': np.random.uniform(0, 100, 100),
+    'location_z': np.random.uniform(0, 50, 100),
+    'environment_factor': np.random.uniform(0.5, 1.5, 100),  # e.g., environmental impact factor
+    'temporal_pattern': np.random.choice(['stable', 'fluctuating', 'sudden_spike'], 100),
+    'component_id': np.random.choice(['HVAC', 'Pipe', 'Sensor', 'Electrical', 'Structural'], 100)  # Target variable
+}
+
+# Convert the dataset into a DataFrame
+df = pd.DataFrame(data)
+
+# Feature Engineering: Encoding categorical features
+# Encoding 'sensor_type' and 'temporal_pattern' as numeric values using LabelEncoder
+label_enc = LabelEncoder()
+df['sensor_type_encoded'] = label_enc.fit_transform(df['sensor_type'])
+df['temporal_pattern_encoded'] = label_enc.fit_transform(df['temporal_pattern'])
+
+# Select features and target
+features = ['sensor_type_encoded', 'location_x', 'location_y', 'location_z', 'environment_factor', 'temporal_pattern_encoded']
+X = df[features]
+y = df['component_id']  # Target variable: component_id
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Standardize the feature set
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# Model Selection: Using Random Forest Classifier
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train_scaled, y_train)
+
+# Predict and evaluate the model
+y_pred = model.predict(X_test_scaled)
+
+# Evaluate the model's performance
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Accuracy: {accuracy:.2f}")
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
+
+# Display the confusion matrix
+conf_matrix = confusion_matrix(y_test, y_pred)
+print("\nConfusion Matrix:")
+print(conf_matrix)
+
+# Feature Importance Analysis
+importances = model.feature_importances_
+feature_importance = pd.Series(importances, index=features).sort_values(ascending=False)
+print("\nFeature Importance:")
+print(feature_importance)
