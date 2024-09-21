@@ -1,0 +1,22 @@
+# Pivoting the data for multiple variables
+heatmap_data_temp = df.pivot_table(index='Timestamp', columns='Zone', values='Temperature (°C)')
+heatmap_data_airflow = df.pivot_table(index='Timestamp', columns='Zone', values='HVAC Airflow (m³/s)')
+heatmap_data_energy = df.pivot_table(index='Timestamp', columns='Zone', values='Energy Consumption (kWh)')
+
+# Plotting the heatmaps for Temperature, Airflow, and Energy Consumption
+fig, axes = plt.subplots(3, 1, figsize=(10, 18))
+
+# Temperature Heatmap
+sns.heatmap(heatmap_data_temp, annot=True, cmap='coolwarm', linewidths=.5, ax=axes[0])
+axes[0].set_title('Temperature Heatmap (°C)')
+
+# Airflow Heatmap
+sns.heatmap(heatmap_data_airflow, annot=True, cmap='Blues', linewidths=.5, ax=axes[1])
+axes[1].set_title('HVAC Airflow Heatmap (m³/s)')
+
+# Energy Consumption Heatmap
+sns.heatmap(heatmap_data_energy, annot=True, cmap='Greens', linewidths=.5, ax=axes[2])
+axes[2].set_title('Energy Consumption Heatmap (kWh)')
+
+plt.tight_layout()
+plt.show()
