@@ -1,0 +1,96 @@
+#Imports and Data Generation
+#dash: Framework for building web applications in Python.
+#dcc and html: components from Dash are used to create interactive elements and HTML layouts, respectively.
+#dash.dependencies as dd: For defining callback inputs and outputs.
+#plotly.express as px: For creating charts and graphs.
+#pandas: For data manipulation and analysis.
+#numpy: For numerical operations and generating random data.
+
+pip install dash plotly pandas
+import dash
+from dash import dcc, html
+import dash.dependencies as dd
+import plotly.express as px
+import pandas as pd
+import numpy as np
+
+#Generating Mock Sensor Data:
+#Generate mock data for different zones, timestamps, and sensor metrics (Temperature, Energy Consumption, HVAC Airflow).
+#np.tile and np.repeat are used to create a DataFrame with repeated timestamps and zones.
+
+np.random.seed(42)
+zones = ['Zone 1', 'Zone 2', 'Zone 3', 'Zone 4', 'Zone 5']
+timestamps = pd.date_range(start="2023-09-12 09:00", periods=20, freq="H")
+
+data = {
+    'Timestamp': np.tile(timestamps, len(zones)),
+    'Zone': np.repeat(zones, len(timestamps)),
+    'Temperature (°C)': np.random.uniform(20, 30, size=len(zones) * len(timestamps)),
+    'Energy Consumption (kWh)': np.random.uniform(5, 15, size=len(zones) * len(timestamps)),
+    'HVAC Airflow (m³/s)': np.random.uniform(0.5, 3, size=len(zones) * len(timestamps)),
+}
+
+df = pd.DataFrame(data)
+
+#Creating the Dash Application
+#Initialize a Dash application.
+
+app = dash.Dash(__name__)
+
+#Layout of the Dashboard:
+#H1: Title of the dashboard.
+#Dropdown: Allows users to select a zone.
+#Graph: Displays a time series plot.
+#Slider: For simulating changes in temperature.
+#Div: For showing the results of the simulation.
+
+app.layout = html.Div(children=[
+    html.H1("Interactive Digital Twin Dashboard"),
+    ...
+])
+
+#@app.callback decorators define interactive behavior.
+#Update Time Series Graph:
+#Updates the line chart based on the selected zone from the dropdown.
+#Filters the DataFrame by the selected zone and creates a line chart for three metrics.
+
+@app.callback(
+    dd.Output('time-series-graph', 'figure'),
+    [dd.Input('zone-dropdown', 'value')]
+)
+def update_time_series(selected_zone):
+    filtered_df = df[df['Zone'] == selected_zone]
+    fig = px.line(
+        filtered_df, x='Timestamp', y=['Temperature (°C)', 'Energy Consumption (kWh)', 'HVAC Airflow (m³/s)'],
+        title=f"{selected_zone} Metrics Over Time"
+    )
+    return fig
+
+#Run Simulation:
+#Simulates how increasing the temperature affects energy consumption and HVAC airflow.
+#Displays the original and simulated values based on the temperature increase.
+
+@app.callback(
+    dd.Output('simulation-output', 'children'),
+    [dd.Input('zone-dropdown-simulation', 'value'), dd.Input('temperature-slider', 'value')]
+)
+def run_simulation(selected_zone, temp_increase):
+    original_energy = df[df['Zone'] == selected_zone]['Energy Consumption (kWh)'].mean()
+    original_airflow = df[df['Zone'] == selected_zone]['HVAC Airflow (m³/s)'].mean()
+
+    new_energy = original_energy * (1 + temp_increase * 0.05)  # 5% increase in energy per °C
+    new_airflow = original_airflow * (1 + temp_increase * 0.02)  # 2% increase in airflow per °C
+
+    return html.Div([
+        html.P(f"Original Energy Consumption: {original_energy:.2f} kWh"),
+        html.P(f"New Energy Consumption: {new_energy:.2f} kWh (after +{temp_increase}°C)"),
+        html.P(f"Original HVAC Airflow: {original_airflow:.2f} m³/s"),
+        html.P(f"New HVAC Airflow: {new_airflow:.2f} m³/s (after +{temp_increase}°C)")
+    ])
+
+#Running the Server
+
+if __name__ == '__main__':
+    app.run_server(debug=True)
+
+
